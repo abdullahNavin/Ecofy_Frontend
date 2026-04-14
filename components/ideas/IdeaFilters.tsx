@@ -71,7 +71,7 @@ export function IdeaFilters({ categories }: IdeaFiltersProps) {
         <Label>Category</Label>
         <Select 
           value={searchParams.get("category") || "all"} 
-          onValueChange={(val) => updateFilter("category", val === "all" ? "" : val)}
+          onValueChange={(val) => updateFilter("category", val === "all" || !val ? "" : val)}
         >
           <SelectTrigger>
             <SelectValue placeholder="All Categories" />
@@ -89,7 +89,7 @@ export function IdeaFilters({ categories }: IdeaFiltersProps) {
         <Label>Sort By</Label>
         <Select 
           value={searchParams.get("sort") || "recent"} 
-          onValueChange={(val) => updateFilter("sort", val)}
+          onValueChange={(val) => updateFilter("sort", val ?? "")}
         >
           <SelectTrigger>
             <SelectValue />
@@ -106,7 +106,7 @@ export function IdeaFilters({ categories }: IdeaFiltersProps) {
         <Label>Type</Label>
         <Select 
           value={searchParams.has("paid") ? searchParams.get("paid")! : "all"} 
-          onValueChange={(val) => updateFilter("paid", val === "all" ? "" : val)}
+          onValueChange={(val) => updateFilter("paid", !val || val === "all" ? "" : val)}
         >
           <SelectTrigger>
             <SelectValue placeholder="All Types" />
@@ -129,7 +129,10 @@ export function IdeaFilters({ categories }: IdeaFiltersProps) {
           max={100} 
           step={5} 
           value={[parseInt(searchParams.get("minVotes") || "0")]} 
-          onValueChange={(vals) => updateFilter("minVotes", vals[0].toString())}
+          onValueChange={(vals) => {
+            const v = Array.isArray(vals) ? vals[0] : vals;
+            updateFilter("minVotes", v.toString());
+          }}
         />
       </div>
 

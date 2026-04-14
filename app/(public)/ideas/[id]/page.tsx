@@ -13,7 +13,7 @@ import { IdeaStatusBadge } from "@/components/ideas/IdeaStatusBadge";
 import { VoteBar } from "@/components/ideas/VoteBar";
 import { CommentThread } from "@/components/comments/CommentThread";
 import { PurchaseButton } from "@/components/payment/PurchaseButton";
-import { ChevronRight, Home, Eye, Lock, MessageCircle } from "lucide-react";
+import { ChevronRight, Home, Lock, MessageCircle } from "lucide-react";
 import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +53,10 @@ export default async function IdeaDetailPage({
     const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ideas/${id}/comments`, { headers });
     if (commentsRes.ok) {
       const commentsData = await commentsRes.json();
-      comments = commentsData.data;
+      // Backend may return { comments: [...] }, { data: [...] }, or directly an array
+      comments = Array.isArray(commentsData)
+        ? commentsData
+        : commentsData.data ?? commentsData.comments ?? [];
     }
   } catch (error) {
     notFound();
@@ -113,10 +116,6 @@ export default async function IdeaDetailPage({
                 <div className="flex items-center gap-1">
                   <MessageCircle className="h-4 w-4" />
                   {idea.commentCount} Comments
-                </div>
-                <div className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  {Math.floor(Math.random() * 500) + 50} Views
                 </div>
               </div>
             </div>

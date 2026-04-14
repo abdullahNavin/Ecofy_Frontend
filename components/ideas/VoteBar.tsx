@@ -65,7 +65,7 @@ export function VoteBar({
               <div className="pointer-events-none">{buttons}</div>
             </div>
           </TooltipTrigger>
-          <TooltipContent side="bottom">
+          <TooltipContent>
             <p>Log in to participate in voting</p>
           </TooltipContent>
         </Tooltip>

@@ -52,8 +52,11 @@ export const api = {
     check: () => req<{ status: string }>("/health"),
   },
 
-  // ── Auth ───────────────────────────────────────────────────────────────
   auth: {
+    login: (body: { email: string; password: string }) =>
+      req<{ success: boolean; user?: User }>("/auth/login", { method: "POST", body: JSON.stringify(body) }),
+    logout: () =>
+      req<{ message: string }>("/auth/logout", { method: "POST" }),
     signup: (body: { name: string; email: string; password: string }) =>
       req<User>("/auth/signup", { method: "POST", body: JSON.stringify(body) }),
     me: () => req<User>("/auth/me"),

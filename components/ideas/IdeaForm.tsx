@@ -1,7 +1,5 @@
 "use client";
 
-import { useForm } from "react-form"; // Wait, we should use 'react-hook-form' with 'zod' based on PRD.
-// I'll rewrite this cleanly using basic react-hook-form
 import { useForm as useRHForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,7 +22,7 @@ const ideaSchema = z.object({
   problemStatement: z.string().min(20, "Problem statement must be at least 20 characters"),
   proposedSolution: z.string().min(20, "Solution must be at least 20 characters"),
   description: z.string().min(50, "Description must be at least 50 characters"),
-  isPaid: z.boolean().default(false),
+  isPaid: z.boolean(),
   price: z.number().min(0).optional().nullable(),
   images: z.string().optional(), // We'll parse this to array
 });
@@ -71,7 +69,7 @@ export function IdeaForm({ initialData, isEdit = false }: IdeaFormProps) {
         proposedSolution: data.proposedSolution,
         description: data.description,
         isPaid: data.isPaid,
-        price: data.isPaid ? (data.price || null) : null,
+        price: data.isPaid ? (data.price ?? undefined) : undefined,
         images: data.images ? data.images.split(",").map(i => i.trim()).filter(Boolean) : [],
       };
 
@@ -104,7 +102,7 @@ export function IdeaForm({ initialData, isEdit = false }: IdeaFormProps) {
         <Label htmlFor="categoryId">Category *</Label>
         <Select 
           defaultValue={initialData?.categoryId} 
-          onValueChange={(val) => setValue("categoryId", val)}
+          onValueChange={(val) => setValue("categoryId", val ?? "")}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a category" />

@@ -92,9 +92,9 @@ export default function AdminCategoriesPage() {
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New Category</Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={<Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> New Category</Button>}
+          />
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingId ? "Edit Category" : "Create Category"}</DialogTitle>

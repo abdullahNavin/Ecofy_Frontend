@@ -20,7 +20,8 @@ export function CommentItem({ comment, onReply, onDelete, isReply = false }: Com
   const { data: session } = useSession();
 
   const isOwner = session?.user?.id === comment.author.id;
-  const isAdmin = session?.user?.role === "ADMIN";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
   const canDelete = isOwner || isAdmin;
 
   const handleReplySubmit = async (content: string) => {

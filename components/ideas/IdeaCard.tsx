@@ -13,7 +13,7 @@ export interface IdeaCardProps {
   title: string;
   category: { id: string; name: string };
   description: string;
-  imageUrl?: string;
+  images?: string[];
   isPaid: boolean;
   price?: number;
   upvoteCount: number;
@@ -28,7 +28,7 @@ export function IdeaCard({
   title,
   category,
   description,
-  imageUrl,
+  images,
   isPaid,
   price,
   upvoteCount,
@@ -38,6 +38,7 @@ export function IdeaCard({
   createdAt,
 }: IdeaCardProps) {
   const netVotes = upvoteCount - downvoteCount;
+  const imageUrl = images?.[0];
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-md h-full group">

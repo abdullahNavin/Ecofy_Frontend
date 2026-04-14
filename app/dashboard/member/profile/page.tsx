@@ -27,7 +27,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (session?.user) {
       setName(session.user.name);
-      setAvatarUrl(session.user.image || "");
+      setAvatarUrl(session.user.avatarUrl || "");
     }
   }, [session]);
 
