@@ -30,7 +30,7 @@ const ideaSchema = z.object({
 type IdeaFormValues = z.infer<typeof ideaSchema>;
 
 interface IdeaFormProps {
-  initialData?: Partial<CreateIdeaDto> & { id?: string };
+  initialData?: Partial<CreateIdeaDto> & { id?: string; categoryId?: string; price?: number | string };
   isEdit?: boolean;
 }
 
@@ -48,12 +48,13 @@ export function IdeaForm({ initialData, isEdit = false }: IdeaFormProps) {
       proposedSolution: initialData?.proposedSolution || "",
       description: initialData?.description || "",
       isPaid: initialData?.isPaid || false,
-      price: initialData?.price || undefined,
+      price: initialData?.price !== undefined && initialData?.price !== null ? Number(initialData.price) : undefined,
       images: initialData?.images?.join(", ") || "",
     }
   });
 
   const isPaid = watch("isPaid");
+  const categoryId = watch("categoryId");
 
   useEffect(() => {
     api.categories.list().then(setCategories).catch(() => {});
@@ -101,7 +102,7 @@ export function IdeaForm({ initialData, isEdit = false }: IdeaFormProps) {
       <div className="space-y-2">
         <Label htmlFor="categoryId">Category *</Label>
         <Select 
-          defaultValue={initialData?.categoryId} 
+          value={categoryId || undefined}
           onValueChange={(val) => setValue("categoryId", val ?? "")}
         >
           <SelectTrigger>

@@ -1,16 +1,37 @@
 "use client";
 
-import { useSession } from "@/lib/auth/betterAuthClient";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lightbulb, MessageCircle, Triangle } from "lucide-react";
+import { useSession } from "@/lib/auth/betterAuthClient";
+import { api } from "@/lib/api/client";
+import type { DashboardSummary } from "@/types";
 
 export default function MemberDashboardOverview() {
-  const { data: session } = useSession();
+  const { data: session, isPending: isSessionPending } = useSession();
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // In a real app, you'd fetch user specific stats like total ideas submitted, 
-  // total votes received, total comments etc. from an API.
-  // We'll mock the stats for the overview as the PRD focuses on the page structure 
-  // and having the Idea List table in the `/ideas` nested route.
+  useEffect(() => {
+    if (isSessionPending) {
+      setIsLoading(true);
+      return;
+    }
+
+    if (!session) {
+      setSummary(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    api.auth
+      .dashboardSummary()
+      .then((data) => setSummary(data))
+      .finally(() => setIsLoading(false));
+  }, [session, isSessionPending]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl">
@@ -28,8 +49,8 @@ export default function MemberDashboardOverview() {
             <Lightbulb className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground mt-1">+2 from last month</p>
+            <div className="text-2xl font-bold">{isLoading ? "..." : summary?.stats.myIdeas ?? 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Ideas you have created so far</p>
           </CardContent>
         </Card>
         
@@ -39,8 +60,8 @@ export default function MemberDashboardOverview() {
             <Triangle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">342</div>
-            <p className="text-xs text-muted-foreground mt-1">Across all your active ideas</p>
+            <div className="text-2xl font-bold">{isLoading ? "..." : summary?.stats.totalUpvotesReceived ?? 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Across all of your submitted ideas</p>
           </CardContent>
         </Card>
         
@@ -50,8 +71,8 @@ export default function MemberDashboardOverview() {
             <MessageCircle className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground mt-1">You have 5 unread replies</p>
+            <div className="text-2xl font-bold">{isLoading ? "..." : summary?.stats.commentsOnIdeas ?? 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total discussion activity on your ideas</p>
           </CardContent>
         </Card>
       </div>
@@ -61,10 +82,33 @@ export default function MemberDashboardOverview() {
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-8">
-            <p className="text-sm text-muted-foreground">
-              Your activity feed will appear here showing when people vote or comment on your ideas.
-            </p>
+          <div className="space-y-4">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading activity...</p>
+            ) : summary?.recentActivity.length ? (
+              summary.recentActivity.map((activity) => (
+                <div key={`${activity.type}-${activity.id}`} className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm">
+                      <span className="font-medium">{activity.actorName}</span>{" "}
+                      {activity.type === "vote"
+                        ? `added a ${activity.meta === "UPVOTE" ? "vote" : "downvote"} on`
+                        : "commented on"}{" "}
+                      <Link href={`/ideas/${activity.ideaId}`} className="font-medium text-primary hover:underline">
+                        {activity.ideaTitle}
+                      </Link>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No recent activity yet. Votes and comments on your ideas will appear here.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -2,7 +2,9 @@ import type {
   Category,
   Comment,
   CreateIdeaDto,
+  DashboardSummary,
   Idea,
+  IdeaStatus,
   IdeaQueryParams,
   PaginatedIdeas,
   Purchase,
@@ -71,6 +73,7 @@ export const api = {
     signup: (body: { name: string; email: string; password: string }) =>
       req<User>("/auth/signup", { method: "POST", body: JSON.stringify(body) }),
     me: () => req<User>("/auth/me"),
+    dashboardSummary: () => req<DashboardSummary>("/auth/dashboard-summary"),
     updateProfile: (body: { name?: string; avatarUrl?: string }) =>
       req<User>("/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
     changePassword: (body: { currentPassword: string; newPassword: string }) =>
@@ -91,6 +94,7 @@ export const api = {
   ideas: {
     list: (params: IdeaQueryParams) =>
       req<PaginatedIdeas>(`/ideas?${qs(params as Record<string, unknown>)}`),
+    mine: () => req<Idea[]>("/ideas/mine"),
     get: (id: string) => req<Idea>(`/ideas/${id}`),
     create: (body: CreateIdeaDto) =>
       req<Idea>("/ideas", { method: "POST", body: JSON.stringify(body) }),
@@ -147,6 +151,11 @@ export const api = {
       approve: (id: string) => req<Idea>(`/admin/ideas/${id}/approve`, { method: "PATCH" }),
       reject: (id: string, feedback: string) =>
         req<Idea>(`/admin/ideas/${id}/reject`, { method: "PATCH", body: JSON.stringify({ feedback }) }),
+      setStatus: (id: string, status: IdeaStatus, feedback?: string) =>
+        req<Idea>(`/admin/ideas/${id}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status, feedback }),
+        }),
       delete: (id: string) => req<void>(`/admin/ideas/${id}`, { method: "DELETE" }),
     },
     users: {

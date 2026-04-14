@@ -20,23 +20,26 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
 export default function MyIdeasPage() {
-  const { data: session } = useSession();
+  const { data: session, isPending: isSessionPending } = useSession();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (isSessionPending) {
+      setIsLoading(true);
+      return;
+    }
+
     if (session?.user?.id) {
-      api.ideas.list({ author: session.user.id, authorId: session.user.id, userId: session.user.id })
-        .then(res => {
-          const loaded = res?.data || (Array.isArray(res) ? res : []);
-          setIdeas(loaded);
-        })
+      setIsLoading(true);
+      api.ideas.mine()
+        .then(setIdeas)
         .catch(() => toast.error("Failed to load ideas"))
         .finally(() => setIsLoading(false));
-    } else if (!session) {
+    } else {
       setIsLoading(false);
     }
-  }, [session]);
+  }, [session, isSessionPending]);
 
   const handleSubmit = async (id: string) => {
     try {
@@ -107,6 +110,11 @@ export default function MyIdeasPage() {
                     <div className="text-xs text-muted-foreground mt-0.5">
                       {formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true })}
                     </div>
+                    {idea.status === "REJECTED" && idea.rejectionFeedback ? (
+                      <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                        <span className="font-semibold">Admin feedback:</span> {idea.rejectionFeedback}
+                      </div>
+                    ) : null}
                   </TableCell>
                   <TableCell>{idea.category.name}</TableCell>
                   <TableCell><IdeaStatusBadge status={idea.status} /></TableCell>
@@ -124,16 +132,18 @@ export default function MyIdeasPage() {
                         </Link>
                       </Button>
 
-                      {idea.status === "DRAFT" && (
+                      {(idea.status === "DRAFT" || idea.status === "REJECTED") && (
                         <>
                           <Button variant="ghost" size="icon" title="Edit" asChild>
                             <Link href={`/dashboard/member/ideas/${idea.id}/edit`}>
                               <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
                             </Link>
                           </Button>
-                          <Button variant="ghost" size="icon" title="Submit for Review" onClick={() => handleSubmit(idea.id)}>
-                            <Send className="h-4 w-4 text-muted-foreground hover:text-green-600" />
-                          </Button>
+                          {idea.status === "DRAFT" ? (
+                            <Button variant="ghost" size="icon" title="Submit for Review" onClick={() => handleSubmit(idea.id)}>
+                              <Send className="h-4 w-4 text-muted-foreground hover:text-green-600" />
+                            </Button>
+                          ) : null}
                         </>
                       )}
 

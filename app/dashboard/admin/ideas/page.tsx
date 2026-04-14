@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Idea } from "@/types";
+import { Idea, IdeaStatus } from "@/types";
 import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { IdeaStatusBadge } from "@/components/ideas/IdeaStatusBadge";
-import { Check, X, Eye, Loader2 } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminIdeasPage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [rejectIdeaId, setRejectIdeaId] = useState<string | null>(null);
+  const [rejectFeedback, setRejectFeedback] = useState("");
+  const [pendingStatusIdeaId, setPendingStatusIdeaId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchIdeas();
@@ -31,23 +38,52 @@ export default function AdminIdeasPage() {
     }
   };
 
+  const updateIdeaRow = (updatedIdea: Idea) => {
+    setIdeas((prev) => prev.map((idea) => (idea.id === updatedIdea.id ? { ...idea, ...updatedIdea } : idea)));
+  };
+
   const handleApprove = async (id: string) => {
     try {
-      await api.admin.ideas.approve(id);
+      const updated = await api.admin.ideas.setStatus(id, "APPROVED");
       toast.success("Idea approved");
-      setIdeas((prev) => prev.map((i) => (i.id === id ? { ...i, status: "APPROVED" } : i)));
+      updateIdeaRow(updated);
     } catch {
       toast.error("Failed to approve idea");
     }
   };
 
-  const handleReject = async (id: string) => {
-    const reason = prompt("Reason for rejection:");
-    if (reason === null) return;
+  const handleStatusChange = async (idea: Idea, status: IdeaStatus) => {
+    if (status === idea.status) return;
+
+    if (status === "REJECTED") {
+      setRejectIdeaId(idea.id);
+      setPendingStatusIdeaId(idea.id);
+      setRejectFeedback("");
+      setIsRejectDialogOpen(true);
+      return;
+    }
+
     try {
-      await api.admin.ideas.reject(id, reason);
+      const updated = await api.admin.ideas.setStatus(idea.id, status);
+
+      toast.success(`Idea moved to ${status.replace("_", " ").toLowerCase()}`);
+      updateIdeaRow(updated);
+    } catch {
+      toast.error("Failed to update idea status");
+    }
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectIdeaId) return;
+
+    try {
+      const updated = await api.admin.ideas.setStatus(rejectIdeaId, "REJECTED", rejectFeedback);
       toast.success("Idea rejected");
-      setIdeas((prev) => prev.map((i) => (i.id === id ? { ...i, status: "REJECTED" } : i)));
+      updateIdeaRow(updated);
+      setIsRejectDialogOpen(false);
+      setRejectIdeaId(null);
+      setPendingStatusIdeaId(null);
+      setRejectFeedback("");
     } catch {
       toast.error("Failed to reject idea");
     }
@@ -93,7 +129,24 @@ export default function AdminIdeasPage() {
                     </div>
                   </TableCell>
                   <TableCell>{idea.author.name}</TableCell>
-                  <TableCell><IdeaStatusBadge status={idea.status} /></TableCell>
+                  <TableCell>
+                    <div className="space-y-2">
+                      <IdeaStatusBadge status={idea.status} />
+                      <Select
+                        value={idea.status}
+                        onValueChange={(value) => handleStatusChange(idea, value as IdeaStatus)}
+                      >
+                        <SelectTrigger className="w-[180px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
+                          <SelectItem value="APPROVED">Approved</SelectItem>
+                          <SelectItem value="REJECTED">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-2">
                       <Button variant="ghost" size="icon" asChild title="View Idea">
@@ -101,16 +154,10 @@ export default function AdminIdeasPage() {
                           <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                         </Link>
                       </Button>
-                      
-                      {idea.status === "UNDER_REVIEW" && (
-                        <>
-                          <Button variant="ghost" size="icon" title="Approve" onClick={() => handleApprove(idea.id)}>
-                            <Check className="h-4 w-4 text-green-600 hover:text-green-700" />
-                          </Button>
-                          <Button variant="ghost" size="icon" title="Reject" onClick={() => handleReject(idea.id)}>
-                            <X className="h-4 w-4 text-destructive hover:text-destructive" />
-                          </Button>
-                        </>
+                      {idea.status !== "APPROVED" && (
+                        <Button variant="outline" size="sm" onClick={() => handleApprove(idea.id)}>
+                          Approve
+                        </Button>
                       )}
                     </div>
                   </TableCell>
@@ -120,6 +167,35 @@ export default function AdminIdeasPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Idea</DialogTitle>
+            <DialogDescription>
+              Add feedback so the author understands why this idea was rejected.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={rejectFeedback}
+            onChange={(e) => setRejectFeedback(e.target.value)}
+            placeholder="Explain what needs to change before this idea can be approved."
+            className="min-h-28"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!pendingStatusIdeaId || rejectFeedback.trim().length < 10}
+              onClick={handleRejectConfirm}
+            >
+              Reject Idea
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

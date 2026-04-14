@@ -61,6 +61,25 @@ export interface Purchase {
   createdAt: string;
 }
 
+export interface DashboardActivity {
+  id: string;
+  type: "vote" | "comment";
+  createdAt: string;
+  actorName: string;
+  ideaId: string;
+  ideaTitle: string;
+  meta: string | null;
+}
+
+export interface DashboardSummary {
+  stats: {
+    myIdeas: number;
+    totalUpvotesReceived: number;
+    commentsOnIdeas: number;
+  };
+  recentActivity: DashboardActivity[];
+}
+
 export interface PaginatedIdeas {
   data: Idea[];
   meta: {
