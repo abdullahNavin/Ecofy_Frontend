@@ -18,11 +18,22 @@ import { Eye, Edit, Trash, Send, Plus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function MyIdeasPage() {
   const { data: session, isPending: isSessionPending } = useSession();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteIdeaId, setDeleteIdeaId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isSessionPending) {
@@ -51,12 +62,13 @@ export default function MyIdeasPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this idea?")) return;
+  const handleDelete = async () => {
+    if (!deleteIdeaId) return;
     try {
-      await api.ideas.delete(id);
+      await api.ideas.delete(deleteIdeaId);
       toast.success("Idea deleted");
-      setIdeas(ideas.filter(i => i.id !== id));
+      setIdeas((prev) => prev.filter((idea) => idea.id !== deleteIdeaId));
+      setDeleteIdeaId(null);
     } catch {
       toast.error("Failed to delete idea");
     }
@@ -148,7 +160,7 @@ export default function MyIdeasPage() {
                       )}
 
                       {(idea.status === "DRAFT" || idea.status === "REJECTED") && (
-                        <Button variant="ghost" size="icon" title="Delete" onClick={() => handleDelete(idea.id)}>
+                        <Button variant="ghost" size="icon" title="Delete" onClick={() => setDeleteIdeaId(idea.id)}>
                           <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                         </Button>
                       )}
@@ -160,6 +172,23 @@ export default function MyIdeasPage() {
           </Table>
         </div>
       )}
+
+      <AlertDialog open={!!deleteIdeaId} onOpenChange={(open) => !open && setDeleteIdeaId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Idea</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove your idea. You cannot undo this action.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

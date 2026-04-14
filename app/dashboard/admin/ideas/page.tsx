@@ -6,13 +6,23 @@ import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { IdeaStatusBadge } from "@/components/ideas/IdeaStatusBadge";
-import { Eye, Loader2 } from "lucide-react";
+import { Eye, Loader2, Trash } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminIdeasPage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -21,6 +31,7 @@ export default function AdminIdeasPage() {
   const [rejectIdeaId, setRejectIdeaId] = useState<string | null>(null);
   const [rejectFeedback, setRejectFeedback] = useState("");
   const [pendingStatusIdeaId, setPendingStatusIdeaId] = useState<string | null>(null);
+  const [deleteIdeaId, setDeleteIdeaId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchIdeas();
@@ -49,6 +60,18 @@ export default function AdminIdeasPage() {
       updateIdeaRow(updated);
     } catch {
       toast.error("Failed to approve idea");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteIdeaId) return;
+    try {
+      await api.admin.ideas.delete(deleteIdeaId);
+      toast.success("Idea deleted");
+      setIdeas((prev) => prev.filter((idea) => idea.id !== deleteIdeaId));
+      setDeleteIdeaId(null);
+    } catch {
+      toast.error("Failed to delete idea");
     }
   };
 
@@ -159,6 +182,14 @@ export default function AdminIdeasPage() {
                           Approve
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Delete Idea"
+                        onClick={() => setDeleteIdeaId(idea.id)}
+                      >
+                        <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -196,6 +227,23 @@ export default function AdminIdeasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteIdeaId} onOpenChange={(open) => !open && setDeleteIdeaId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Idea</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the idea from the platform. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
