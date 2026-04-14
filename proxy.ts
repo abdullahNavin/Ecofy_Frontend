@@ -13,6 +13,12 @@ export function proxy(req: NextRequest) {
   const needsAdmin  = ADMIN_PATHS.some(p => pathname.startsWith(p));
   const isGuestOnly = GUEST_ONLY.some(p => pathname.startsWith(p));
 
+  if (pathname === "/dashboard") {
+    if (!sessionToken) return NextResponse.redirect(new URL("/auth/login", req.url));
+    if (role === "ADMIN") return NextResponse.redirect(new URL("/dashboard/admin", req.url));
+    return NextResponse.redirect(new URL("/dashboard/member", req.url));
+  }
+
   if (!sessionToken && (needsMember || needsAdmin))
     return NextResponse.redirect(new URL(`/auth/login?from=${encodeURIComponent(pathname)}`, req.url));
 
@@ -20,7 +26,7 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard/member", req.url));
 
   if (sessionToken && isGuestOnly)
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL(role === "ADMIN" ? "/dashboard/admin" : "/dashboard/member", req.url));
 
   return NextResponse.next();
 }
