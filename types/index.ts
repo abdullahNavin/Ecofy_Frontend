@@ -79,6 +79,8 @@ export interface IdeaQueryParams {
   paid?:     boolean;
   minVotes?: number;
   author?:   string;
+  authorId?: string;
+  userId?:   string;
   q?:        string;
 }
 

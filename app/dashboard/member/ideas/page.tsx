@@ -26,8 +26,11 @@ export default function MyIdeasPage() {
 
   useEffect(() => {
     if (session?.user?.id) {
-      api.ideas.list({ author: session.user.id })
-        .then(res => setIdeas(res.data))
+      api.ideas.list({ author: session.user.id, authorId: session.user.id, userId: session.user.id })
+        .then(res => {
+          const loaded = res?.data || (Array.isArray(res) ? res : []);
+          setIdeas(loaded);
+        })
         .catch(() => toast.error("Failed to load ideas"))
         .finally(() => setIsLoading(false));
     } else if (!session) {
