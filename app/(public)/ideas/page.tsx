@@ -36,7 +36,8 @@ export default async function IdeasPage({
     api.categories.list().catch(() => []),
   ]);
 
-  const { data: ideas, meta } = ideasData;
+  const ideas = Array.isArray(ideasData) ? ideasData : (ideasData?.data || []);
+  const meta = ideasData && !Array.isArray(ideasData) ? ideasData.meta : undefined;
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12 w-full flex-1">

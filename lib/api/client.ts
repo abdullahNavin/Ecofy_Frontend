@@ -24,6 +24,13 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const json = JSON.parse(text);
   if (!res.ok) throw new Error(json.error ?? json.message ?? "Request failed");
   
+  // Normalize heterogeneous backend resource keys to standardized 'data' property
+  ['ideas', 'idea', 'categories', 'category', 'users', 'user', 'purchases'].forEach(key => {
+    if (json && typeof json === 'object' && key in json && !('data' in json)) {
+      json.data = json[key];
+    }
+  });
+
   // Unwrap if the backend returns { data: ... } but it isn't PaginatedIdeas
   if (json && typeof json === 'object' && 'data' in json && !('meta' in json) && !Array.isArray(json)) {
     return json.data as T;
