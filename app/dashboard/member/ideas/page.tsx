@@ -5,13 +5,13 @@ import { Idea } from "@/types";
 import { api } from "@/lib/api/client";
 import { useSession } from "@/lib/auth/betterAuthClient";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { IdeaStatusBadge } from "@/components/ideas/IdeaStatusBadge";
 import { Eye, Edit, Trash, Send, Plus, Loader2 } from "lucide-react";
@@ -123,7 +123,7 @@ export default function MyIdeasPage() {
                           <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                         </Link>
                       </Button>
-                      
+
                       {idea.status === "DRAFT" && (
                         <>
                           <Button variant="ghost" size="icon" title="Edit" asChild>
@@ -136,7 +136,7 @@ export default function MyIdeasPage() {
                           </Button>
                         </>
                       )}
-                      
+
                       {(idea.status === "DRAFT" || idea.status === "REJECTED") && (
                         <Button variant="ghost" size="icon" title="Delete" onClick={() => handleDelete(idea.id)}>
                           <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
