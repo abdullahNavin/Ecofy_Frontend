@@ -29,6 +29,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     return json.data as T;
   }
   return json as T;
+}
 
 function qs(params: Record<string, unknown>): string {
   return new URLSearchParams(
