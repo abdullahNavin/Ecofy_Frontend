@@ -14,7 +14,7 @@ export function PaidBadge({ price, className }: PaidBadgeProps) {
       className={cn("bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm gap-1 border-0", className)}
     >
       <Lock className="h-3 w-3" />
-      {price !== undefined ? `$${price.toFixed(2)}` : "Paid"}
+      {price !== undefined && price !== null ? `$${Number(price).toFixed(2)}` : "Paid"}
     </Badge>
   );
 }
