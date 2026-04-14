@@ -6,7 +6,7 @@ export const userService = {
         try {
             const cookieStore = await cookies()
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/get-session`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/api/auth/get-session`, {
                 headers: {
                     cookie: cookieStore.toString()
                 },

@@ -25,6 +25,7 @@ export default function MyIdeasPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log("session", session)
     if (session?.user?.id) {
       api.ideas.list({ author: session.user.id, authorId: session.user.id, userId: session.user.id })
         .then(res => {
