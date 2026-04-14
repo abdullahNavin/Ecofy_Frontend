@@ -37,10 +37,8 @@ export default async function DashboardLayout({
             <span className="font-bold text-xl">Ecofy</span>
           </Link>
           <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
+            <SheetTrigger className="inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+              <Menu className="h-5 w-5" />
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
               <SheetHeader className="h-16 flex items-start justify-center px-6 border-b border-border text-left">

@@ -19,10 +19,16 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     credentials: "include", // BetterAuth cookie sent automatically
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? "Request failed");
-  return json.data as T;
-}
+  const text = await res.text();
+  if (!text) return null as T;
+  const json = JSON.parse(text);
+  if (!res.ok) throw new Error(json.error ?? json.message ?? "Request failed");
+  
+  // Unwrap if the backend returns { data: ... } but it isn't PaginatedIdeas
+  if (json && typeof json === 'object' && 'data' in json && !('meta' in json) && !Array.isArray(json)) {
+    return json.data as T;
+  }
+  return json as T;
 
 function qs(params: Record<string, unknown>): string {
   return new URLSearchParams(

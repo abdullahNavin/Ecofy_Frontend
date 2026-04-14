@@ -15,7 +15,7 @@ export default async function HomePage() {
     api.categories.list().catch(() => []),
   ]);
 
-  const topIdeas = featuredData.data?.slice(0, 3) || [];
+  const topIdeas = (featuredData?.data || (Array.isArray(featuredData) ? featuredData : []))?.slice(0, 3) || [];
 
   return (
     <div className="flex flex-col flex-1 w-full relative">
