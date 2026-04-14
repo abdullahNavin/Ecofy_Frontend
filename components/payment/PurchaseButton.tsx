@@ -8,10 +8,11 @@ import { api } from "@/lib/api/client";
 import { useSession } from "@/lib/auth/betterAuthClient";
 import { useRouter } from "next/navigation";
 
-export function PurchaseButton({ ideaId, price }: { ideaId: string; price: number }) {
+export function PurchaseButton({ ideaId, price }: { ideaId: string; price: number | string }) {
   const [loading, setLoading] = useState(false);
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const formattedPrice = Number(price).toFixed(2);
 
   const handlePurchase = async () => {
     if (!session) {
@@ -41,7 +42,7 @@ export function PurchaseButton({ ideaId, price }: { ideaId: string; price: numbe
       ) : (
         <Lock className="h-5 w-5" />
       )}
-      {session ? `Unlock Idea — $${price.toFixed(2)}` : "Login to Unlock Idea"}
+      {session ? `Unlock Idea — $${formattedPrice}` : "Login to Unlock Idea"}
     </Button>
   );
 }

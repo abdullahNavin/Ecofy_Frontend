@@ -20,10 +20,13 @@ export const dynamic = "force-dynamic";
 
 export default async function IdeaDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ session_id?: string }>
 }) {
   const { id } = await params;
+  const { session_id: sessionId } = await searchParams;
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("better-auth.session_token")?.value;
 
@@ -41,6 +44,12 @@ export default async function IdeaDetailPage({
   let comments = [];
 
   try {
+    if (sessionToken && sessionId) {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/verify/${sessionId}`, {
+        headers,
+      });
+    }
+
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ideas/${id}`, { headers });
     if (!res.ok) {
       if (res.status === 404) notFound();

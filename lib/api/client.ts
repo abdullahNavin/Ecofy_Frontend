@@ -31,6 +31,17 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     }
   });
 
+  // Paginated admin/list responses may come back as { ideas, meta } or { users, meta }.
+  if (
+    json &&
+    typeof json === "object" &&
+    "meta" in json &&
+    "data" in json &&
+    Array.isArray((json as { data: unknown }).data)
+  ) {
+    return (json as { data: T }).data;
+  }
+
   // Unwrap if the backend returns { data: ... } but it isn't PaginatedIdeas
   if (json && typeof json === 'object' && 'data' in json && !('meta' in json) && !Array.isArray(json)) {
     return json.data as T;

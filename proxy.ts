@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const MEMBER_PATHS = ["/dashboard/member", "/payment"];
-const ADMIN_PATHS  = ["/dashboard/admin"];
-const GUEST_ONLY   = ["/auth/login", "/auth/signup"];
+const ADMIN_PATHS = ["/dashboard/admin"];
+const GUEST_ONLY = ["/auth/login", "/auth/signup"];
 
 export function proxy(req: NextRequest) {
   const sessionToken = req.cookies.get("better-auth.session_token")?.value;
-  const role         = req.cookies.get("ecofy.role")?.value;
+  const role = req.cookies.get("ecofy.role")?.value;
   const { pathname } = req.nextUrl;
 
   const needsMember = MEMBER_PATHS.some(p => pathname.startsWith(p));
-  const needsAdmin  = ADMIN_PATHS.some(p => pathname.startsWith(p));
+  const needsAdmin = ADMIN_PATHS.some(p => pathname.startsWith(p));
   const isGuestOnly = GUEST_ONLY.some(p => pathname.startsWith(p));
 
   if (pathname === "/dashboard") {

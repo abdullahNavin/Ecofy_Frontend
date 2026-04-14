@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
                 </TableCell>
                 <TableCell>
                   <Select
-                    defaultValue={user.role}
+                    value={user.role}
                     onValueChange={(val) => handleChangeRole(user.id, val as "MEMBER" | "ADMIN")}
                   >
                     <SelectTrigger className="w-[120px] h-8 text-xs">
