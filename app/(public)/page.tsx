@@ -2,9 +2,17 @@ import Link from "next/link";
 import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IdeaGrid } from "@/components/ideas/IdeaGrid";
-import { Leaf, ChevronDown, CheckCircle2 } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ChevronDown,
+  Leaf,
+  MessageCircle,
+  Search,
+  Sparkles,
+  Triangle as TriangleIcon,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +23,8 @@ export default async function HomePage() {
     api.categories.list().catch(() => []),
   ]);
 
-  const topIdeas = (featuredData?.data || (Array.isArray(featuredData) ? featuredData : []))?.slice(0, 3) || [];
+  const featuredIdeas = Array.isArray(featuredData) ? featuredData : featuredData?.data || [];
+  const topIdeas = featuredIdeas.slice(0, 3);
 
   return (
     <div className="flex flex-col flex-1 w-full relative">
@@ -45,57 +54,181 @@ export default async function HomePage() {
       </section>
 
       {/* ── 2. Inline Search Card ── */}
-      <section className="relative z-10 -mt-10 px-4 md:px-6 max-w-4xl mx-auto w-full">
-        <div className="bg-surface rounded-2xl shadow-xl p-4 md:p-6 border border-border/50">
-          <form action="/ideas" className="flex flex-col sm:flex-row gap-4">
-            <Input 
-              name="q"
-              placeholder="Search ideas by keyword..." 
-              className="flex-1 h-12 text-base"
-            />
-            <Select name="category">
-              <SelectTrigger className="w-full sm:w-[200px] h-12">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button type="submit" size="lg" className="h-12 w-full sm:w-auto px-8">
-              Search
-            </Button>
-          </form>
+      <section className="relative z-10 -mt-10 mx-auto w-full max-w-5xl px-4 md:px-6">
+        <div className="rounded-[28px] border border-border/60 bg-background/95 p-5 shadow-2xl backdrop-blur md:p-7">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Quick Discovery
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">Search for ideas worth backing</h2>
+                <p className="text-sm text-muted-foreground">
+                  Jump straight into the topics, categories, and sustainability concepts that match your goals.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="rounded-full border border-border bg-background px-3 py-1">Top voted</span>
+                <span className="rounded-full border border-border bg-background px-3 py-1">Newest ideas</span>
+                <span className="rounded-full border border-border bg-background px-3 py-1">Premium concepts</span>
+              </div>
+            </div>
+
+            <form action="/ideas" className="grid gap-3 md:grid-cols-[1.5fr_0.9fr_auto]">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  name="q"
+                  placeholder="Search by keyword, topic, or sustainability challenge"
+                  className="h-14 rounded-2xl border-border/70 bg-background pl-11 text-base"
+                />
+              </div>
+
+              <div className="relative">
+                <select
+                  name="category"
+                  defaultValue=""
+                  className="h-14 w-full appearance-none rounded-2xl border border-input bg-background px-4 pr-10 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  <option value="">All categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.slug}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
+
+              <Button type="submit" size="lg" className="h-14 rounded-2xl px-8">
+                Search Ideas
+              </Button>
+            </form>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Link
+                href="/ideas?sort=top_voted"
+                className="rounded-2xl border border-border/60 bg-background px-4 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div className="font-semibold">Browse what the community loves</div>
+                <div className="mt-1 text-muted-foreground">Start with the highest-voted ideas.</div>
+              </Link>
+              <Link
+                href="/ideas?paid=true"
+                className="rounded-2xl border border-border/60 bg-background px-4 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div className="font-semibold">Explore premium concepts</div>
+                <div className="mt-1 text-muted-foreground">Find detailed, monetized project plans.</div>
+              </Link>
+              <Link
+                href="/ideas?sort=most_commented"
+                className="rounded-2xl border border-border/60 bg-background px-4 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div className="font-semibold">See active discussions</div>
+                <div className="mt-1 text-muted-foreground">Follow ideas with the most community feedback.</div>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ── 3. Top 3 Spotlight ── */}
       {topIdeas.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 md:px-6 py-20 w-full">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight">Community Favorites</h2>
-            <p className="text-muted-foreground mt-2">The most upvoted green initiatives right now.</p>
+          <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-800">
+                <Sparkles className="h-3.5 w-3.5" />
+                Community Favorites
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight">The ideas people are rallying behind</h2>
+              <p className="text-muted-foreground mt-2">
+                A sharper look at the most supported sustainability concepts on Ecofy right now.
+              </p>
+            </div>
+            <Button variant="outline" className="w-full md:w-auto" asChild>
+              <Link href="/ideas?sort=top_voted">
+                View Full Ranking
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.9fr_0.9fr]">
             {topIdeas.map((idea, index) => (
-              <div key={idea.id} className={`transform transition-all ${index === 1 ? 'md:-translate-y-4 md:scale-105' : ''}`}>
-                <div className="relative border-l-4 border-l-primary bg-card rounded-r-xl shadow-md p-6 group hover:shadow-lg transition-all h-full flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-xl group-hover:text-primary transition-colors line-clamp-2">{idea.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{idea.description}</p>
+              <article
+                key={idea.id}
+                className={`group relative overflow-hidden rounded-[28px] border border-border/60 bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl ${
+                  index === 0 ? "xl:min-h-[360px] xl:p-8" : ""
+                }`}
+              >
+                <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                  #{index + 1}
+                </div>
+                <div className="flex h-full flex-col justify-between gap-6">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-primary/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                        {idea.category.name}
+                      </span>
+                      {idea.isPaid ? (
+                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                          Premium
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                          Free Access
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className={`font-bold leading-tight transition-colors group-hover:text-primary ${index === 0 ? "text-2xl md:text-3xl" : "text-xl"}`}>
+                        {idea.title}
+                      </h3>
+                      <p className={`mt-3 text-muted-foreground ${index === 0 ? "line-clamp-4 text-base" : "line-clamp-3 text-sm"}`}>
+                        {idea.description || "Premium details stay protected until a supporter unlocks this idea."}
+                      </p>
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        By <span className="font-medium text-foreground">{idea.author.name}</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="mt-6 flex items-center justify-between">
-                    <span className="text-primary font-semibold flex items-center gap-1">
-                      <Triangle className="h-4 w-4" fill="currentColor" /> {idea.upvoteCount - idea.downvoteCount}
-                    </span>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/ideas/${idea.id}`}>Read more</Link>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-3 rounded-2xl bg-muted/50 p-4 text-sm">
+                      <div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <TriangleIcon className="h-4 w-4 text-primary" />
+                          Votes
+                        </div>
+                        <div className="mt-1 text-lg font-bold text-foreground">
+                          {idea.upvoteCount - idea.downvoteCount > 0 ? "+" : ""}
+                          {idea.upvoteCount - idea.downvoteCount}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <MessageCircle className="h-4 w-4 text-sky-600" />
+                          Comments
+                        </div>
+                        <div className="mt-1 text-lg font-bold text-foreground">{idea.commentCount}</div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          Status
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-foreground">Community Pick</div>
+                      </div>
+                    </div>
+                    <Button variant={index === 0 ? "default" : "outline"} className="w-full" asChild>
+                      <Link href={`/ideas/${idea.id}`}>
+                        Explore Idea
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
                     </Button>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </section>
@@ -113,7 +246,7 @@ export default async function HomePage() {
               <Link href="/ideas">See All &rarr;</Link>
             </Button>
           </div>
-          <IdeaGrid ideas={featuredData.data || []} />
+          <IdeaGrid ideas={featuredIdeas} />
         </div>
       </section>
 
@@ -165,32 +298,12 @@ export default async function HomePage() {
             Join thousands of changemakers inside the community. We send out the top 5 ideas once a week. Let’s build a sustainable future together.
           </p>
           <div className="flex justify-center mt-8">
-            <Button size="lg" variant="secondary" className="mr-4 text-green-900 font-bold px-8" asChild>
+            <Button size="lg" variant="secondary" className="mr-4 px-8 font-bold text-green-900" asChild>
               <Link href="/auth/signup">Join Now</Link>
             </Button>
           </div>
         </div>
       </section>
     </div>
-  );
-}
-
-// Inline Icon to keep it self contained without import errors
-function Triangle(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-    </svg>
   );
 }

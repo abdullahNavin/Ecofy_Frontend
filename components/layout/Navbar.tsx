@@ -19,7 +19,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +35,6 @@ export function Navbar() {
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  console.log("session", session) //null
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isAdmin = (session?.user as any)?.role === "ADMIN";
@@ -127,40 +125,46 @@ export function Navbar() {
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
               </button>
-              <SheetContent side="right">
-                <SheetHeader>
-                  <SheetTitle className="text-left flex items-center gap-2">
+              <SheetContent side="right" className="w-full max-w-[320px] px-0">
+                <SheetHeader className="border-b border-border px-6 pb-5 pt-6">
+                  <SheetTitle className="flex items-center gap-2 text-left">
                     <Leaf className="h-5 w-5 text-primary" />
                     Ecofy
                   </SheetTitle>
                 </SheetHeader>
-                <div className="flex flex-col gap-4 mt-6">
-                  {NAV_LINKS.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`text-lg font-medium ${pathname === link.href ? "text-primary" : "text-foreground"
+                <div className="flex flex-col px-4 pb-6 pt-5">
+                  <div className="space-y-1">
+                    {NAV_LINKS.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`flex min-h-12 items-center rounded-xl px-4 text-base font-medium transition-colors ${
+                          pathname === link.href
+                            ? "bg-primary/10 text-primary"
+                            : "text-foreground hover:bg-accent hover:text-accent-foreground"
                         }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
-                  <div className="h-px bg-border my-2" />
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="my-5 h-px bg-border" />
+                  <div className="space-y-3">
                   {isPending ? (
-                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-11 w-full rounded-xl" />
                   ) : session ? (
                     <>
                       <Link
                         href={dashboardLink}
-                        className="text-lg font-medium hover:text-primary"
+                        className="flex min-h-12 items-center rounded-xl bg-muted/60 px-4 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-primary"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         Dashboard
                       </Link>
                       <Button
                         variant="ghost"
-                        className="justify-start px-0 text-lg hover:bg-transparent hover:text-primary focus:bg-transparent"
+                        className="h-12 justify-start rounded-xl px-4 text-base hover:bg-accent hover:text-primary focus:bg-accent"
                         onClick={() => {
                           signOut();
                           setIsMobileMenuOpen(false);
@@ -170,19 +174,20 @@ export function Navbar() {
                       </Button>
                     </>
                   ) : (
-                    <div className="flex flex-col gap-2">
-                      <Button variant="outline" asChild className="w-full justify-center">
+                    <div className="flex flex-col gap-3">
+                      <Button variant="outline" asChild className="h-12 w-full justify-center rounded-xl">
                         <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
                           Log In
                         </Link>
                       </Button>
-                      <Button asChild className="w-full justify-center">
+                      <Button asChild className="h-12 w-full justify-center rounded-xl">
                         <Link href="/auth/signup" onClick={() => setIsMobileMenuOpen(false)}>
                           Get Started
                         </Link>
                       </Button>
                     </div>
                   )}
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

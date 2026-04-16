@@ -7,8 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Category } from "@/types";
-import { useCallback, useState } from "react";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useCallback, useEffect, useState } from "react";
 
 interface IdeaFiltersProps {
   categories: Category[];
@@ -21,6 +20,10 @@ export function IdeaFilters({ categories }: IdeaFiltersProps) {
 
   // Local state for debounced inputs
   const [q, setQ] = useState(searchParams.get("q") || "");
+
+  useEffect(() => {
+    setQ(searchParams.get("q") || "");
+  }, [searchParams]);
   
   const createQueryString = useCallback(
     (name: string, value: string) => {
@@ -79,7 +82,7 @@ export function IdeaFilters({ categories }: IdeaFiltersProps) {
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map(c => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              <SelectItem key={c.id} value={c.slug}>{c.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>

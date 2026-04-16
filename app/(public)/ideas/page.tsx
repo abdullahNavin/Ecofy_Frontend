@@ -15,6 +15,7 @@ export default async function IdeasPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const unresolvedSearchParams = await searchParams;
+  const pageParams = new URLSearchParams();
   
   const page = Number(unresolvedSearchParams.page) || 1;
   const limit = Number(unresolvedSearchParams.limit) || 10;
@@ -29,6 +30,21 @@ export default async function IdeasPage({
   if (unresolvedSearchParams.q) query.q = String(unresolvedSearchParams.q);
   if (unresolvedSearchParams.minVotes) query.minVotes = Number(unresolvedSearchParams.minVotes);
   if (unresolvedSearchParams.paid !== undefined) query.paid = unresolvedSearchParams.paid === "true";
+
+  Object.entries(unresolvedSearchParams).forEach(([key, value]) => {
+    if (key === "page" || value === undefined) return;
+    if (Array.isArray(value)) {
+      value.forEach((entry) => pageParams.append(key, entry));
+      return;
+    }
+    pageParams.set(key, value);
+  });
+
+  const getPageHref = (nextPage: number) => {
+    const params = new URLSearchParams(pageParams.toString());
+    params.set("page", String(nextPage));
+    return `?${params.toString()}`;
+  };
 
   // Fetch data
   const [ideasData, categories] = await Promise.all([
@@ -85,7 +101,7 @@ export default async function IdeasPage({
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious 
-                      href={`?page=${Math.max(1, page - 1)}`} 
+                      href={getPageHref(Math.max(1, page - 1))}
                       className={page <= 1 ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
@@ -93,7 +109,7 @@ export default async function IdeasPage({
                   {Array.from({ length: meta.totalPages }).map((_, i) => (
                     <PaginationItem key={i}>
                       <PaginationLink 
-                        href={`?page=${i + 1}`}
+                        href={getPageHref(i + 1)}
                         isActive={page === i + 1}
                       >
                         {i + 1}
@@ -103,7 +119,7 @@ export default async function IdeasPage({
 
                   <PaginationItem>
                     <PaginationNext 
-                      href={`?page=${Math.min(meta.totalPages, page + 1)}`}
+                      href={getPageHref(Math.min(meta.totalPages, page + 1))}
                       className={page >= meta.totalPages ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
