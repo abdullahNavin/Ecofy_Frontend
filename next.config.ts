@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+const backendProxyTarget =
+  process.env.BACKEND_PROXY_TARGET ?? "http://localhost:5000";
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -12,6 +15,14 @@ const nextConfig: NextConfig = {
         hostname: "localhost",
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/backend/:path*",
+        destination: `${backendProxyTarget}/:path*`,
+      },
+    ];
   },
 };
 

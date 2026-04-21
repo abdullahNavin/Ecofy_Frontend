@@ -13,10 +13,25 @@ import type {
   VoteType,
 } from "@/types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL + "/api/v1";
+function normalizeOrigin(value: string) {
+  return value.replace(/\/+$/, "");
+}
+
+function getApiBase() {
+  if (typeof window !== "undefined") {
+    return "/backend/api/v1";
+  }
+
+  const serverOrigin =
+    process.env.BACKEND_PROXY_TARGET ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    "http://localhost:5000";
+
+  return `${normalizeOrigin(serverOrigin)}/api/v1`;
+}
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${getApiBase()}${path}`, {
     ...init,
     credentials: "include", // BetterAuth cookie sent automatically
     headers: { "Content-Type": "application/json", ...init?.headers },
