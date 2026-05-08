@@ -2,10 +2,16 @@ import type {
   Category,
   Comment,
   CreateIdeaDto,
+  AdminOverview,
+  CreatorAnalytics,
   DashboardSummary,
   Idea,
+  IdeaAssistantSuggestion,
   IdeaStatus,
   IdeaQueryParams,
+  ModerationAuditLog,
+  NotificationItem,
+  PaginatedResponse,
   PaginatedIdeas,
   Purchase,
   Role,
@@ -39,30 +45,22 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const text = await res.text();
   if (!text) return null as T;
   const json = JSON.parse(text);
-  if (!res.ok) throw new Error(json.error ?? json.message ?? "Request failed");
-  
-  // Normalize heterogeneous backend resource keys to standardized 'data' property
-  ['ideas', 'idea', 'categories', 'category', 'users', 'user', 'purchases'].forEach(key => {
-    if (json && typeof json === 'object' && key in json && !('data' in json)) {
-      json.data = json[key];
-    }
-  });
-
-  // Paginated admin/list responses may come back as { ideas, meta } or { users, meta }.
-  if (
-    json &&
-    typeof json === "object" &&
-    "meta" in json &&
-    "data" in json &&
-    Array.isArray((json as { data: unknown }).data)
-  ) {
-    return (json as { data: T }).data;
+  if (!res.ok) {
+    const message =
+      typeof json?.error === "object"
+        ? json.error.message
+        : json.error ?? json.message ?? "Request failed";
+    throw new Error(message);
   }
 
-  // Unwrap if the backend returns { data: ... } but it isn't PaginatedIdeas
-  if (json && typeof json === 'object' && 'data' in json && !('meta' in json) && !Array.isArray(json)) {
+  if (json && typeof json === "object" && "data" in json && "meta" in json) {
+    return { data: json.data, meta: json.meta } as T;
+  }
+
+  if (json && typeof json === "object" && "data" in json) {
     return json.data as T;
   }
+
   return json as T;
 }
 
@@ -149,6 +147,7 @@ export const api = {
   search: {
     ideas: (q: string, params?: Pick<IdeaQueryParams, "category" | "page" | "limit">) =>
       req<PaginatedIdeas>(`/search?q=${encodeURIComponent(q)}&${qs((params ?? {}) as Record<string, unknown>)}`),
+    recommendations: () => req<Idea[]>("/search/recommendations"),
   },
 
   // ── Newsletter ─────────────────────────────────────────────────────────
@@ -161,8 +160,15 @@ export const api = {
 
   // ── Admin ──────────────────────────────────────────────────────────────
   admin: {
+    overview: () => req<AdminOverview>("/admin/overview"),
+    auditLogs: (params?: { page?: number; limit?: number; ideaId?: string }) =>
+      req<PaginatedResponse<ModerationAuditLog>>(`/admin/audit-logs?${qs((params ?? {}) as Record<string, unknown>)}`),
     ideas: {
-      list: () => req<Idea[]>("/admin/ideas"),
+      list: (params?: { page?: number; limit?: number; status?: IdeaStatus | "ALL"; q?: string; category?: string }) => {
+        const cleaned = { ...(params ?? {}) };
+        if (cleaned.status === "ALL") delete cleaned.status;
+        return req<PaginatedResponse<Idea>>(`/admin/ideas?${qs(cleaned as Record<string, unknown>)}`);
+      },
       approve: (id: string) => req<Idea>(`/admin/ideas/${id}/approve`, { method: "PATCH" }),
       reject: (id: string, feedback: string) =>
         req<Idea>(`/admin/ideas/${id}/reject`, { method: "PATCH", body: JSON.stringify({ feedback }) }),
@@ -174,11 +180,46 @@ export const api = {
       delete: (id: string) => req<void>(`/admin/ideas/${id}`, { method: "DELETE" }),
     },
     users: {
-      list: () => req<User[]>("/admin/users"),
+      list: (params?: { page?: number; limit?: number; q?: string; role?: Role | "ALL" }) => {
+        const cleaned = { ...(params ?? {}) };
+        if (cleaned.role === "ALL") delete cleaned.role;
+        return req<PaginatedResponse<User>>(`/admin/users?${qs(cleaned as Record<string, unknown>)}`);
+      },
       activate: (id: string) => req<User>(`/admin/users/${id}/activate`, { method: "PATCH" }),
       deactivate: (id: string) => req<User>(`/admin/users/${id}/deactivate`, { method: "PATCH" }),
       setRole: (id: string, role: Role) =>
         req<User>(`/admin/users/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
     },
+  },
+
+  notifications: {
+    list: (params?: { unreadOnly?: boolean }) =>
+      req<{ data: NotificationItem[]; meta: { unreadCount: number } }>(
+        `/notifications?${qs((params ?? {}) as Record<string, unknown>)}`
+      ),
+    markRead: (id: string) => req<void>(`/notifications/${id}/read`, { method: "PATCH" }),
+    markAllRead: () => req<void>("/notifications/read-all", { method: "PATCH" }),
+  },
+
+  analytics: {
+    creator: () => req<CreatorAnalytics>("/analytics/creator"),
+  },
+
+  ai: {
+    ideaAssistant: (body: {
+      title?: string;
+      categoryId?: string;
+      problemStatement?: string;
+      proposedSolution?: string;
+      description?: string;
+      isPaid?: boolean;
+      price?: number;
+      images?: string[];
+      prompt?: string;
+      ideaId?: string;
+    }) => req<IdeaAssistantSuggestion>("/ai/idea-assistant", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   },
 };

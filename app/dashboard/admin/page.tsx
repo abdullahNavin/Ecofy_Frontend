@@ -4,29 +4,28 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import { StatCard } from "@/components/admin/StatCard";
 import { Users, Lightbulb, Activity, CheckCircle } from "lucide-react";
-import { Idea, User } from "@/types";
+import { AdminOverview } from "@/types";
 
 export default function AdminDashboardOverview() {
-  const [ideas, setIdeas] = useState<Idea[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      api.admin.ideas.list().catch(() => []),
-      api.admin.users.list().catch(() => [])
-    ]).then(([ideasData, usersData]) => {
-      setIdeas(ideasData);
-      setUsers(usersData);
-    }).finally(() => {
-      setIsLoading(false);
-    });
+    api.admin
+      .overview()
+      .then((data) => {
+        setOverview(data);
+        setLoadError("");
+      })
+      .catch(() => setLoadError("Unable to load admin metrics right now."))
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const totalUsers = users.length;
-  const pendingIdeas = ideas.filter(i => i.status === "UNDER_REVIEW").length;
-  const approvedIdeas = ideas.filter(i => i.status === "APPROVED").length;
-  const premiumIdeas = ideas.filter(i => i.isPaid).length;
+  const totalUsers = overview?.totalUsers ?? 0;
+  const pendingIdeas = overview?.pendingIdeas ?? 0;
+  const approvedIdeas = overview?.approvedIdeas ?? 0;
+  const premiumIdeas = overview?.premiumIdeas ?? 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl">
@@ -35,6 +34,7 @@ export default function AdminDashboardOverview() {
         <p className="text-muted-foreground mt-1">
           Platform overview and core metrics.
         </p>
+        {loadError ? <p className="text-sm text-destructive mt-2">{loadError}</p> : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -43,7 +43,6 @@ export default function AdminDashboardOverview() {
           value={isLoading ? "..." : totalUsers}
           description="Registered community members"
           icon={<Users className="h-4 w-4" />}
-          trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="Ideas Under Review"

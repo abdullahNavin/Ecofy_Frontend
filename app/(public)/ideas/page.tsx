@@ -48,7 +48,14 @@ export default async function IdeasPage({
 
   // Fetch data
   const [ideasData, categories] = await Promise.all([
-    api.ideas.list(query).catch(() => ({ data: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0 } })),
+    (query.q
+      ? api.search.ideas(query.q, {
+          category: query.category,
+          page: query.page,
+          limit: query.limit,
+        })
+      : api.ideas.list(query)
+    ).catch(() => ({ data: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0 } })),
     api.categories.list().catch(() => []),
   ]);
 

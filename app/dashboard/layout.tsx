@@ -1,17 +1,18 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Leaf, Menu } from "lucide-react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
-import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet";
+import { getCurrentUser } from "@/lib/auth/server";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const role = cookieStore.get("ecofy.role")?.value === "ADMIN" ? "ADMIN" : "MEMBER";
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/login");
+  const role = user.role === "ADMIN" ? "ADMIN" : "MEMBER";
 
   return (
     <div className="min-h-screen flex w-full bg-muted/20">

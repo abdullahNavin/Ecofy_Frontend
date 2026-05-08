@@ -22,6 +22,7 @@ interface SidebarProps {
 const MEMBER_LINKS = [
   { name: "Overview", href: "/dashboard/member", icon: Home },
   { name: "My Ideas", href: "/dashboard/member/ideas", icon: Lightbulb },
+  { name: "Analytics", href: "/dashboard/member/analytics", icon: BarChart2 },
   { name: "Create Idea", href: "/dashboard/member/ideas/new", icon: Pencil },
   { name: "Purchases", href: "/dashboard/member/purchases", icon: CreditCard },
   { name: "Profile", href: "/dashboard/member/profile", icon: User },
@@ -30,6 +31,7 @@ const MEMBER_LINKS = [
 const ADMIN_LINKS = [
   { name: "Overview", href: "/dashboard/admin", icon: BarChart2 },
   { name: "Moderation", href: "/dashboard/admin/ideas", icon: ClipboardList },
+  { name: "Audit Logs", href: "/dashboard/admin/audit-logs", icon: ClipboardList },
   { name: "Users", href: "/dashboard/admin/users", icon: Users },
   { name: "Categories", href: "/dashboard/admin/categories", icon: Tags },
 ];

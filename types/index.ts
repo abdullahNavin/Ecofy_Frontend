@@ -90,6 +90,85 @@ export interface PaginatedIdeas {
   };
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  href?: string;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface AdminOverview {
+  totalUsers: number;
+  pendingIdeas: number;
+  approvedIdeas: number;
+  premiumIdeas: number;
+}
+
+export interface ModerationAuditLog {
+  id: string;
+  action: string;
+  note?: string | null;
+  fromStatus?: IdeaStatus | null;
+  toStatus?: IdeaStatus | null;
+  createdAt: string;
+  admin: Pick<User, "id" | "name" | "email">;
+  idea: Pick<Idea, "id" | "title">;
+}
+
+export interface CreatorIdeaAnalytics {
+  id: string;
+  title: string;
+  slug: string;
+  status: IdeaStatus;
+  isPaid: boolean;
+  netVotes: number;
+  upvoteCount: number;
+  downvoteCount: number;
+  commentCount: number;
+  viewCount: number;
+  purchaseCount: number;
+  revenue: number;
+  currency: string;
+  lastViewedAt?: string | null;
+  createdAt: string;
+}
+
+export interface CreatorAnalytics {
+  stats: {
+    totalIdeas: number;
+    totalViews: number;
+    totalPurchases: number;
+    totalRevenue: number;
+  };
+  ideas: CreatorIdeaAnalytics[];
+}
+
+export interface IdeaAssistantSuggestion {
+  title: string;
+  categoryName: string;
+  categoryId: string;
+  problemStatement: string;
+  proposedSolution: string;
+  description: string;
+  rationale: string;
+  improvementChecklist: string[];
+}
+
 export interface IdeaQueryParams {
   page?:     number;
   limit?:    number;

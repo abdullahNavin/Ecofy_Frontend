@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Idea, IdeaStatus } from "@/types";
+import { Category, Idea, IdeaStatus, PaginationMeta } from "@/types";
 import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { IdeaStatusBadge } from "@/components/ideas/IdeaStatusBadge";
 import { Eye, Loader2, Trash } from "lucide-react";
@@ -23,10 +24,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 export default function AdminIdeasPage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<IdeaStatus | "ALL">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [search, setSearch] = useState("");
+  const [meta, setMeta] = useState<PaginationMeta>({ page: 1, limit: 10, total: 0, totalPages: 1 });
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectIdeaId, setRejectIdeaId] = useState<string | null>(null);
   const [rejectFeedback, setRejectFeedback] = useState("");
@@ -34,15 +43,28 @@ export default function AdminIdeasPage() {
   const [deleteIdeaId, setDeleteIdeaId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchIdeas();
+    api.categories.list().then(setCategories).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    fetchIdeas();
+  }, [page, statusFilter, categoryFilter]);
 
   const fetchIdeas = async () => {
     setIsLoading(true);
     try {
-      const data = await api.admin.ideas.list();
-      setIdeas(data);
+      const result = await api.admin.ideas.list({
+        page,
+        limit: 10,
+        status: statusFilter,
+        category: categoryFilter === "ALL" ? undefined : categoryFilter,
+        q: search,
+      });
+      setIdeas(result.data);
+      setMeta(result.meta);
+      setLoadError("");
     } catch {
+      setLoadError("Failed to load moderation queue.");
       toast.error("Failed to load ideas");
     } finally {
       setIsLoading(false);
@@ -69,6 +91,7 @@ export default function AdminIdeasPage() {
       await api.admin.ideas.delete(deleteIdeaId);
       toast.success("Idea deleted");
       setIdeas((prev) => prev.filter((idea) => idea.id !== deleteIdeaId));
+      setMeta((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }));
       setDeleteIdeaId(null);
     } catch {
       toast.error("Failed to delete idea");
@@ -117,6 +140,47 @@ export default function AdminIdeasPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Idea Moderation</h1>
         <p className="text-muted-foreground mt-1">Review and manage community submissions.</p>
+        {loadError ? <p className="text-sm text-destructive mt-2">{loadError}</p> : null}
+      </div>
+
+      <div className="grid gap-3 rounded-xl border bg-surface p-4 md:grid-cols-[1fr_180px_180px_auto]">
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search title or author"
+        />
+        <Select value={statusFilter} onValueChange={(value) => { setStatusFilter((value ?? "ALL") as IdeaStatus | "ALL"); setPage(1); }}>
+          <SelectTrigger>
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All statuses</SelectItem>
+            <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
+            <SelectItem value="APPROVED">Approved</SelectItem>
+            <SelectItem value="REJECTED">Rejected</SelectItem>
+            <SelectItem value="DRAFT">Draft</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value ?? "ALL"); setPage(1); }}>
+          <SelectTrigger>
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.slug}>{category.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          onClick={() => {
+            setPage(1);
+            fetchIdeas();
+          }}
+        >
+          Apply
+        </Button>
       </div>
 
       <div className="border rounded-xl bg-surface overflow-hidden">
@@ -198,6 +262,36 @@ export default function AdminIdeasPage() {
           </TableBody>
         </Table>
       </div>
+
+      {meta.totalPages > 1 ? (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setPage((current) => Math.max(1, current - 1));
+                }}
+                className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            <PaginationItem className="px-3 text-sm text-muted-foreground">
+              Page {meta.page} of {meta.totalPages}
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setPage((current) => Math.min(meta.totalPages, current + 1));
+                }}
+                className={page >= meta.totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      ) : null}
 
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>

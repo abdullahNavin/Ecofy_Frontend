@@ -7,12 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lightbulb, MessageCircle, Triangle } from "lucide-react";
 import { useSession } from "@/lib/auth/betterAuthClient";
 import { api } from "@/lib/api/client";
-import type { DashboardSummary } from "@/types";
+import type { DashboardSummary, Idea } from "@/types";
 
 export default function MemberDashboardOverview() {
   const { data: session, isPending: isSessionPending } = useSession();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [recommendations, setRecommendations] = useState<Idea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (isSessionPending) {
@@ -29,8 +32,19 @@ export default function MemberDashboardOverview() {
     setIsLoading(true);
     api.auth
       .dashboardSummary()
-      .then((data) => setSummary(data))
+      .then((data) => {
+        setSummary(data);
+        setLoadError("");
+      })
+      .catch(() => setLoadError("Unable to load dashboard activity."))
       .finally(() => setIsLoading(false));
+
+    setIsRecommendationsLoading(true);
+    api.search
+      .recommendations()
+      .then((data) => setRecommendations(data))
+      .catch(() => setRecommendations([]))
+      .finally(() => setIsRecommendationsLoading(false));
   }, [session, isSessionPending]);
 
   return (
@@ -40,6 +54,7 @@ export default function MemberDashboardOverview() {
         <p className="text-muted-foreground mt-1">
           Welcome back, {session?.user?.name || "Member"}.
         </p>
+        {loadError ? <p className="text-sm text-destructive mt-2">{loadError}</p> : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -107,6 +122,34 @@ export default function MemberDashboardOverview() {
             ) : (
               <p className="text-sm text-muted-foreground">
                 No recent activity yet. Votes and comments on your ideas will appear here.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recommended for You</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {isRecommendationsLoading ? (
+              <p className="text-sm text-muted-foreground">Finding related ideas...</p>
+            ) : recommendations.length ? (
+              recommendations.map((idea) => (
+                <div key={idea.id} className="space-y-1">
+                  <Link href={`/ideas/${idea.id}`} className="font-medium text-primary hover:underline">
+                    {idea.title}
+                  </Link>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {idea.description}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Vote, comment, and explore more ideas to help Ecofy tune your recommendations.
               </p>
             )}
           </div>

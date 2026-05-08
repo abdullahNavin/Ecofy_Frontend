@@ -14,6 +14,7 @@ import { toast } from "sonner";
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // Form State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -30,7 +31,9 @@ export default function AdminCategoriesPage() {
     try {
       const data = await api.categories.list();
       setCategories(data);
+      setLoadError("");
     } catch {
+      setLoadError("Failed to load categories.");
       toast.error("Failed to load categories");
     } finally {
       setIsLoading(false);
@@ -89,6 +92,7 @@ export default function AdminCategoriesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
           <p className="text-muted-foreground mt-1">Manage idea categorization.</p>
+          {loadError ? <p className="text-sm text-destructive mt-2">{loadError}</p> : null}
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -130,6 +134,12 @@ export default function AdminCategoriesPage() {
               <TableRow>
                 <TableCell colSpan={3} className="h-24 text-center">
                   <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                </TableCell>
+              </TableRow>
+            ) : categories.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                  No categories yet. Create one to organize community ideas.
                 </TableCell>
               </TableRow>
             ) : categories.map((cat) => (
