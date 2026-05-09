@@ -4,7 +4,7 @@ import { useForm as useRHForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useEffect } from "react";
-import { Category, CreateIdeaDto } from "@/types";
+import { Category, CreateIdeaDto, IdeaAssistantSuggestion } from "@/types";
 import { api } from "@/lib/api/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ideaSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -38,8 +39,11 @@ export function IdeaForm({ initialData, isEdit = false }: IdeaFormProps) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [assistantPrompt, setAssistantPrompt] = useState("");
+  const [assistantResult, setAssistantResult] = useState<IdeaAssistantSuggestion | null>(null);
+  const [isAssistantLoading, setIsAssistantLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useRHForm<IdeaFormValues>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch, getValues } = useRHForm<IdeaFormValues>({
     resolver: zodResolver(ideaSchema),
     defaultValues: {
       title: initialData?.title || "",
@@ -59,6 +63,39 @@ export function IdeaForm({ initialData, isEdit = false }: IdeaFormProps) {
   useEffect(() => {
     api.categories.list().then(setCategories).catch(() => {});
   }, []);
+
+  const applyAssistantSuggestion = (suggestion: IdeaAssistantSuggestion) => {
+    setValue("title", suggestion.title, { shouldDirty: true, shouldValidate: true });
+    setValue("categoryId", suggestion.categoryId, { shouldDirty: true, shouldValidate: true });
+    setValue("problemStatement", suggestion.problemStatement, { shouldDirty: true, shouldValidate: true });
+    setValue("proposedSolution", suggestion.proposedSolution, { shouldDirty: true, shouldValidate: true });
+    setValue("description", suggestion.description, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const runAssistant = async () => {
+    const values = getValues();
+    setIsAssistantLoading(true);
+    try {
+      const suggestion = await api.ai.ideaAssistant({
+        ideaId: initialData?.id,
+        title: values.title,
+        categoryId: values.categoryId,
+        problemStatement: values.problemStatement,
+        proposedSolution: values.proposedSolution,
+        description: values.description,
+        isPaid: values.isPaid,
+        price: values.price ?? undefined,
+        images: values.images ? values.images.split(",").map((item) => item.trim()).filter(Boolean) : [],
+        prompt: assistantPrompt || undefined,
+      });
+      setAssistantResult(suggestion);
+      toast.success("AI suggestion is ready");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate AI suggestion");
+    } finally {
+      setIsAssistantLoading(false);
+    }
+  };
 
   const onSubmit = async (data: IdeaFormValues) => {
     setIsSubmitting(true);
@@ -93,6 +130,63 @@ export function IdeaForm({ initialData, isEdit = false }: IdeaFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4 text-primary" />
+            AI Idea Assistant
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="assistantPrompt">What kind of help do you want?</Label>
+            <Textarea
+              id="assistantPrompt"
+              value={assistantPrompt}
+              onChange={(event) => setAssistantPrompt(event.target.value)}
+              placeholder="Example: make this clearer for community voters, add practical implementation steps, and suggest a better title."
+              className="min-h-24"
+            />
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="secondary" onClick={runAssistant} disabled={isAssistantLoading}>
+              {isAssistantLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              Generate Suggestion
+            </Button>
+            {assistantResult ? (
+              <Button type="button" variant="outline" onClick={() => applyAssistantSuggestion(assistantResult)}>
+                Apply All Suggestions
+              </Button>
+            ) : null}
+          </div>
+
+          {assistantResult ? (
+            <div className="space-y-4 rounded-lg border bg-background p-4">
+              <div>
+                <p className="text-sm font-medium">Suggested title</p>
+                <p className="text-sm text-muted-foreground">{assistantResult.title}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Suggested category</p>
+                <p className="text-sm text-muted-foreground">{assistantResult.categoryName}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Why these changes</p>
+                <p className="text-sm text-muted-foreground">{assistantResult.rationale}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Improvement checklist</p>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                  {assistantResult.improvementChecklist.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
       <div className="space-y-2">
         <Label htmlFor="title">Title *</Label>
         <Input id="title" {...register("title")} placeholder="e.g., Community Composting Initiative" />
