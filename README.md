@@ -1,231 +1,134 @@
 # Ecofy Frontend
 
-## Project Overview
+## Overview
 
-Ecofy is a comprehensive sustainability idea-sharing platform designed to foster community-driven innovation in environmental and social sustainability. The frontend application, built with Next.js 16 and modern web technologies, serves as the user interface for a platform where individuals can discover, share, and monetize sustainable ideas.
+Ecofy Frontend is a Next.js 16 application for discovering, creating, moderating, and monetizing sustainability ideas. It works with the sibling backend project in `C:\projects\Ecofy_server` and includes member dashboards, admin moderation tools, premium idea purchase flows, AI-assisted drafting, semantic search, and personalized recommendations.
 
-The platform enables users to:
-- Browse and search through a curated collection of sustainability ideas
-- Contribute their own ideas through a structured submission workflow
-- Engage with the community via comments and voting systems
-- Access premium content through a Stripe-powered payment system
-- Manage personal profiles and track idea performance
-- Participate in moderation as administrators
+## Current Feature Set
 
-This frontend application communicates with the Ecofy backend API to handle authentication, data management, and payment processing, providing a seamless user experience across desktop and mobile devices.
+### Public Experience
 
-## Live URLs
-- **Frontend**: https://ecofy-pro.vercel.app/
-- **Backend API**: https://ecofy-backend-ij77.onrender.com
+- Browse approved sustainability ideas
+- Filter by category, paid/free, votes, and sort order
+- Search ideas with semantic ranking support from the backend
+- View idea details, comments, voting, and premium locks
+- Complete Stripe-powered premium idea purchases
 
-## Core Features
+### Member Experience
 
-### Public Features
-- **Idea Discovery**: Browse sustainability ideas with advanced filtering by category, status, and search terms
-- **Idea Detail Pages**: View comprehensive idea information, including descriptions, voting, and comments
-- **Premium Content**: Unlock exclusive ideas through secure Stripe payments
-- **Community Engagement**: Participate in threaded discussions and vote on ideas
-- **Responsive Design**: Optimized experience across all device sizes
+- Create and edit draft or rejected ideas
+- Use the AI Idea Assistant inside the idea form
+- View dashboard activity and creator analytics
+- See personalized idea recommendations
+- Manage profile and account details
+- Receive in-app notifications for moderation, comments, replies, and purchases
 
-### Member Features
-- **Personal Dashboard**: Overview of user statistics, ideas, and purchases
-- **Idea Management**: Create, edit, and track the status of submitted ideas
-- **Profile Management**: Update personal information and view activity
-- **Purchase History**: Access previously purchased premium ideas
+### Admin Experience
 
-### Admin Features
-- **Content Moderation**: Review and approve/reject submitted ideas with feedback
-- **User Management**: Monitor and manage platform users
-- **Category Management**: Create and organize idea categories
-- **Platform Analytics**: View comprehensive statistics and metrics
+- Review and moderate submitted ideas
+- Filter and paginate moderation queues
+- Manage users and categories
+- View audit logs for moderation actions
+- View platform overview metrics
 
-### Technical Features
-- **Authentication**: Secure login/signup with role-based access control
-- **Payment Integration**: Stripe-powered checkout for premium content
-- **Real-time Updates**: Optimistic UI updates for votes and comments
-- **SEO Optimization**: Server-side rendering for improved search visibility
-- **Progressive Web App**: Fast loading and offline capabilities
+## AI Features
+
+- AI Idea Assistant in the create/edit flow
+- Gemini is used for text generation
+- OpenAI is used for embeddings
+- Semantic search and recommendations depend on backend-generated embeddings
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 with App Router
-- **Language**: TypeScript for type safety
-- **Styling**: Tailwind CSS 4 with custom design system
-- **UI Components**: shadcn/ui component library
-- **Forms**: React Hook Form with Zod validation
-- **Payments**: Stripe.js for secure transactions
-- **Icons**: Lucide React icon set
-- **Authentication**: BetterAuth for session management
-- **State Management**: React hooks and context
-- **API Communication**: Custom typed API client
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Base UI / shadcn-style component patterns
+- React Hook Form + Zod
+- Stripe.js
+- Lucide React
 
-## Architecture Overview
+## Project Structure
 
-The application follows a modern Next.js architecture with clear separation of concerns:
-
-### App Router Structure
-```
+```txt
 app/
-  (public)/                # Public pages with shared layout
-  auth/                    # Authentication routes
-  dashboard/               # Protected dashboard routes
-    member/                # Member-specific pages
-    admin/                 # Admin-specific pages
-  payment/                 # Payment flow pages
-```
-
-### Component Organization
-```
+  (public)/                public pages
+  auth/                    login/signup
+  dashboard/
+    member/                member dashboard, analytics, idea tools
+    admin/                 moderation, users, categories, audit logs
+  payment/                 payment success and cancel pages
 components/
-  layout/                  # Navigation and layout components
-  ui/                      # Reusable UI primitives
-  ideas/                   # Idea-related components
-  comments/                # Comment system components
-  dashboard/               # Dashboard-specific components
-  payment/                 # Payment flow components
-```
-
-### Data Layer
-```
+  comments/                comment UI
+  ideas/                   idea cards, forms, filters, voting
+  layout/                  navbar, sidebar, footer
+  notifications/           in-app notifications UI
+  payment/                 premium purchase UI
+  ui/                      shared primitives
 lib/
-  api/                     # Centralized API client
-  auth/                    # Authentication utilities
-hooks/                     # Custom React hooks
-types/                     # TypeScript type definitions
-```
-
-## Design System
-
-Ecofy uses a consistent design system built on Tailwind CSS:
-
-- **Primary Color**: Green (#16a34a) for CTAs and active states
-- **Typography**: Inter font family with semantic sizing
-- **Spacing**: Consistent padding and margins using Tailwind scale
-- **Components**: shadcn/ui for accessible, customizable UI elements
-- **Status Indicators**: Color-coded badges for idea statuses (Draft, Under Review, Approved, Rejected)
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Ecofy backend API running (default: http://localhost:4000)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Ecofy_client
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-   
-   Create a `.env.local` file in the root directory:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-   STRIPE_SECRET_KEY=your_stripe_secret_key
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open your browser**
-   
-   Navigate to `http://localhost:3000` to view the application.
-
-### Build for Production
-
-```bash
-npm run build
-npm start
+  api/                     typed API client
+  auth/                    auth helpers
+types/                     shared frontend types
 ```
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL | Yes |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for client-side payments | Yes |
-| `STRIPE_SECRET_KEY` | Stripe secret key for server-side operations | Yes |
+Create `C:\projects\Ecofy_client\.env.local`:
 
-## API Integration
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+```
 
-The frontend communicates with the Ecofy backend API using a typed client located in `lib/api/client.ts`. Key endpoints include:
+## Local Development
 
-- Authentication: Login, signup, session management
-- Ideas: CRUD operations, search, filtering
-- Comments: Threaded discussion management
-- Payments: Stripe checkout session creation
-- Admin: Moderation and management functions
+### Prerequisites
 
-## Deployment
+- Node.js 20+
+- Backend running from `C:\projects\Ecofy_server`
 
-The application is configured for deployment on Vercel with the following optimizations:
+### Install
 
-- Static asset optimization
-- API route handling
-- Environment variable management
-- Automatic scaling and CDN
+```bash
+npm install
+```
 
-Update `vercel.json` for custom deployment configurations.
+### Run
 
-## Contributing
-
-1. Follow the established code style and component patterns
-2. Use TypeScript for all new code
-3. Test components and hooks thoroughly
-4. Update documentation for new features
-5. Follow the PRD specifications for UI/UX consistency
-
-## License
-
-[Add license information here]
-
-### 4. Start the development server
 ```bash
 npm run dev
 ```
 
-### 5. Open the app
-Visit `http://localhost:3000` in your browser.
+Open `http://localhost:3000`.
 
-## Available Scripts
-- `npm run dev`  
-  Starts the Next.js development server.
+## Build
 
-- `npm run build`  
-  Creates the production build.
-
-- `npm run start`  
-  Starts the production server after a successful build.
+```bash
+npm run build
+npm run start
+```
 
 ## Backend Dependency
-This frontend depends on the Ecofy backend API being available.
+
+This app expects the backend API to be available at `http://localhost:5000` during local development.
 
 Recommended local pairing:
+
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:5000`
 - Backend API base: `http://localhost:5000/api/v1`
 
-Authentication, dashboard data, moderation tools, and payments will not work correctly unless the backend is running.
+## Important Notes
 
-## Setup Checklist
-- Start the backend server first
-- Confirm `NEXT_PUBLIC_API_URL` points to the backend
-- Configure Stripe keys for premium idea purchases
-- Seed or create an admin account if you need to test admin routes
-- Run both applications together during development
+- Authentication is cookie-based, so frontend and backend URLs must stay aligned.
+- AI drafting, semantic search, and recommendations depend on backend AI provider configuration.
+- Premium content visibility is enforced by the backend, not only by the frontend UI.
+- Admin and member dashboards now use improved empty, error, and loading states.
 
-## Notes
-- The app uses cookie-based authentication, so backend and frontend URLs need to stay aligned with the configured environment.
-- Production builds may log `session null` during static generation for client components that read session state in the browser later. That does not necessarily indicate a runtime auth failure.
-- Premium idea access is unlocked after successful purchase verification through the backend.
+## Scripts
+
+- `npm run dev` starts the Next.js development server
+- `npm run build` creates the production build
+- `npm run start` starts the production server
