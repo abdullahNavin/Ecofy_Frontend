@@ -24,6 +24,17 @@ export default function LoginPageClient() {
 
   const router = useRouter();
 
+  const fillCredentials = (role: "member" | "admin") => {
+    if (role === "member") {
+      setEmail("test2@example.com");
+      setPassword("password123");
+    } else {
+      setEmail("admin@ecofy.com");
+      setPassword("admin12345");
+    }
+    setError(null);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -45,6 +56,38 @@ export default function LoginPageClient() {
       <div className="space-y-2 text-center lg:text-left">
         <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
         <p className="text-muted-foreground">Enter your credentials to access your account.</p>
+      </div>
+
+      {/* Demo Credentials */}
+      <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 space-y-3">
+        <p className="text-xs font-semibold text-primary/80 uppercase tracking-wider">
+          🚀 Demo Credentials
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            id="demo-member-btn"
+            onClick={() => fillCredentials("member")}
+            disabled={isLoading}
+            className="flex flex-col items-start gap-0.5 rounded-lg border border-border bg-background px-3 py-2.5 text-left text-xs transition-colors hover:border-primary/60 hover:bg-primary/5 disabled:opacity-50"
+          >
+            <span className="font-semibold text-foreground">👤 Member</span>
+            <span className="text-muted-foreground">test2@example.com</span>
+            <span className="text-muted-foreground">password123</span>
+          </button>
+          <button
+            type="button"
+            id="demo-admin-btn"
+            onClick={() => fillCredentials("admin")}
+            disabled={isLoading}
+            className="flex flex-col items-start gap-0.5 rounded-lg border border-border bg-background px-3 py-2.5 text-left text-xs transition-colors hover:border-primary/60 hover:bg-primary/5 disabled:opacity-50"
+          >
+            <span className="font-semibold text-foreground">🛡️ Admin</span>
+            <span className="text-muted-foreground">admin@ecofy.com</span>
+            <span className="text-muted-foreground">admin12345</span>
+          </button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">Click a card to auto-fill the form below.</p>
       </div>
 
       <form onSubmit={handleLogin} className="space-y-6">
